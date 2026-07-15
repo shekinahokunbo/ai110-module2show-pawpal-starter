@@ -1,0 +1,60 @@
+classDiagram
+    class Pet {
+        +str name
+        +str animal_type
+        +str breed
+        +int age
+        +list special_needs
+        +update_information()
+        +add_special_need(need)
+        +get_tasks()
+    }
+
+    class CareTask {
+        +str name
+        +str description
+        +int duration
+        +str priority
+        +str category
+        +str preferred_time
+        +bool is_completed
+        +bool is_recurring
+        +Pet pet
+        +mark_completed()
+        +update_task()
+        +get_priority_score() int
+        +fits_within_time(remaining_time) bool
+    }
+
+    class Scheduler {
+        +list tasks
+        +int available_time
+        +str start_time
+        +dict priority_order
+        +sort_tasks()
+        +filter_tasks()
+        +generate_plan() DailyPlan
+        +assign_start_times()
+        +handle_conflicts()
+        +explain_decision(task) str
+    }
+
+    class DailyPlan {
+        +str date
+        +Pet pet
+        +list scheduled_tasks
+        +list skipped_tasks
+        +int total_available_time
+        +int total_scheduled_time
+        +add_scheduled_task(task)
+        +add_skipped_task(task)
+        +calculate_total_time() int
+        +get_remaining_time() int
+        +display_plan() str
+    }
+
+    Pet "1" --> "*" CareTask : has
+    Scheduler "1" --> "*" CareTask : processes
+    Scheduler "1" --> "1" DailyPlan : creates
+    DailyPlan "1" --> "1" Pet : belongs to
+    DailyPlan "1" --> "*" CareTask : contains scheduled

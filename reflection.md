@@ -7,6 +7,33 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+### 1a. Initial Design
+
+For the initial PawPal+ design, I chose four main classes: `Pet`, `CareTask`, `Scheduler`, and `DailyPlan`.
+
+The `Pet` class represents the animal receiving care. It stores basic information such as the pet’s name, animal type, breed, age, and any special needs. Its main responsibility is to keep pet-specific information organized and connect the pet to its care tasks.
+
+The `CareTask` class represents an individual pet care activity, such as feeding, walking, grooming, medication, or enrichment. It stores details including the task name, duration, priority, category, preferred time, and completion status. It is also responsible for actions such as marking a task as completed, updating task information, and determining whether the task fits within the owner’s remaining available time.
+
+The `Scheduler` class contains the main scheduling logic for the system. Its responsibility is to examine the available care tasks, sort them by priority, check the available time, prevent scheduling conflicts, and decide which tasks should be included or skipped. It also explains why each scheduling decision was made.
+
+The `DailyPlan` class represents the completed care schedule for a specific day. It stores the scheduled tasks, skipped tasks, total available time, and total scheduled time. Its responsibility is to organize the scheduler’s results, calculate remaining time, and format the final plan so it can be displayed clearly in the Streamlit interface.
+
+I kept the initial design focused on these four classes to avoid unnecessary complexity. Together, they separate the pet data, task data, scheduling logic, and final schedule into clear responsibilities.
+
+
+The three core actions a user should be able to perform in PawPal+ are:
+
+1. **Enter owner and pet information**
+   The user should be able to provide basic information about themselves and their pet, such as the owner’s name, the pet’s name, animal type, breed, and any important care preferences or needs.
+
+2. **Add and manage pet care tasks**
+   The user should be able to create, edit, and remove care tasks such as feeding, walking, medication, grooming, and enrichment. Each task should include information such as its duration and priority level.
+
+3. **Generate and view a daily care plan**
+   The user should be able to enter how much time they have available and generate a daily schedule. PawPal+ should prioritize the most important tasks, fit them within the available time, and explain why each task was included or skipped.
+
+
 **b. Design changes**
 
 - Did your design change during implementation?

@@ -47,11 +47,22 @@ pip install -r requirements.txt
 Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
 
 ```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
+============================================
+           TODAY'S SCHEDULE
+============================================
+Start: 07:00   Available: 60 min
+
+Scheduled:
+  07:00  Morning walk     (30 min, high)
+  07:30  Give medication  (5 min, high)
+  07:35  Feed             (10 min, medium)
+
+Skipped:
+  - Grooming         Skipped: needs 20 min but only 15 min remained.
+  - Playtime         Skipped: needs 25 min but only 15 min remained.
+--------------------------------------------
+Time used: 45 / 60 min (15 min free)
+============================================
 ```
 
 ## 🧪 Testing PawPal+
@@ -72,14 +83,62 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
+All scheduling logic lives in the `Scheduler` class (plus recurrence on `Task`)
+in [`diagrams/pawpal_system.py`](diagrams/pawpal_system.py).
 
-| Feature | Method(s) | Notes |
-|---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Feature | Method | Notes |
+|---------|--------|-------|
+| Sort by priority (plan builder) | `Scheduler.sort_tasks()` | Highest priority first; earlier `preferred_time` breaks ties. |
+| Sort by time | `Scheduler.sort_by_time()` | Orders all tasks by `preferred_time`; invalid/missing times go last. |
+| Filter by pet | `Scheduler.filter_by_pet(pet_name)` | Case-insensitive match on the task's `pet_name`. |
+| Filter by completion status | `Scheduler.filter_by_status(is_completed)` | `True` = completed tasks, `False` = incomplete. |
+| Overlap conflict detection | `Scheduler.detect_conflicts()` | Same pet + same due date, comparing time *ranges*. |
+| Same-time conflict warnings | `Scheduler.check_time_conflicts()` | Any pet; exact same start time; returns warning strings. |
+| Recurring tasks | `Task.mark_completed()` | Completing a daily/weekly task spawns its next occurrence. |
+| Daily plan generation | `Scheduler.generate_plan()` | Greedily time-boxes tasks into the available minutes. |
+
+### Sorting behavior
+
+- **`Scheduler.sort_by_time()`** returns a **new** list of every task sorted by
+  its `preferred_time` (`"HH:MM"`). It uses `sorted()` with a lambda key that is
+  a tuple `(time_is_invalid, minutes)`, so tasks with missing or malformed times
+  sink to the end instead of crashing. The original task lists are never mutated.
+- **`Scheduler.sort_tasks()`** is the plan builder's internal sort: highest
+  priority score first, with earlier `preferred_time` breaking ties.
+
+### Filtering behavior
+
+- **`Scheduler.filter_by_pet(pet_name)`** returns all tasks for a given pet.
+  Matching is case-insensitive (`"rex"` matches `"Rex"`).
+- **`Scheduler.filter_by_status(is_completed)`** returns completed tasks when
+  passed `True` and incomplete tasks when passed `False`.
+
+### Conflict detection logic
+
+Two complementary checks:
+
+- **`Scheduler.detect_conflicts()`** — the thorough check. It compares tasks on
+  the **same pet and same due date** by their time *ranges* (start +
+  `duration`). Two tasks conflict when each starts before the other ends;
+  tasks that merely touch (one ends exactly when the next begins) do **not**
+  conflict. Returns a list of `(task_a, task_b)` pairs.
+- **`Scheduler.check_time_conflicts()`** — the lightweight check. It flags
+  incomplete tasks on the same due date that share the **exact same**
+  `preferred_time`, across **any pet** (same or different), and returns
+  human-readable **warning strings** rather than raising. Both methods skip
+  tasks with missing/invalid times instead of crashing.
+
+### Recurring task logic
+
+`Task` carries a `frequency` (`"none"`, `"daily"`, or `"weekly"`) and a
+`due_date`. When **`Task.mark_completed()`** is called:
+
+- It marks the task completed and, for a `"daily"` or `"weekly"` task, returns a
+  new incomplete `Task` for the next occurrence (due date advanced by
+  `timedelta(days=1)` or `timedelta(days=7)`), preserving the pet, title,
+  duration, priority, time, and frequency via `dataclasses.replace()`.
+- Completing an **already-completed** task returns `None`, so processing the
+  same task twice never creates duplicate follow-ups.
 
 ## 📸 Demo Walkthrough
 
