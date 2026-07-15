@@ -67,19 +67,51 @@ Time used: 45 / 60 min (15 min free)
 
 ## 🧪 Testing PawPal+
 
+Run the automated suite from the project root:
+
 ```bash
-# Run the full test suite:
-pytest
-
-# Run with coverage:
-pytest --cov
+python -m pytest
 ```
 
-Sample test output:
+### What the tests cover
+
+The suite in [`tests/test_pawpal.py`](tests/test_pawpal.py) has 15 tests across
+the core scheduling behaviors:
+
+- **Sorting correctness** — tasks come back in chronological order, invalid or
+  missing times sort to the end, and the original task list is not mutated.
+- **Recurrence logic** — completing a daily task creates a new task due one day
+  later (and a weekly task seven days later), fields are preserved, and
+  completing the same task twice does **not** create duplicates.
+- **Conflict detection** — exact same-time tasks raise a warning, overlapping
+  time ranges are flagged, and tasks that merely touch (one ends as the next
+  begins) are correctly **not** flagged.
+- **Filtering** — by pet (case-insensitive) and by completion status.
+- **Edge cases** — a pet with no tasks and empty owners never crash the sorter
+  or the conflict checks.
+
+### Sample test output
 
 ```
-# Paste your pytest output here
+============================= test session starts ==============================
+platform darwin -- Python 3.14.0, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/shekinahokunbo/ai110-module2show-pawpal-starter
+plugins: anyio-4.14.0
+collected 15 items
+
+tests/test_pawpal.py ...............                                     [100%]
+
+============================== 15 passed in 0.01s ==============================
 ```
+
+### Confidence Level: ★★★★☆ (4/5)
+
+All 15 tests pass and cover the happy paths plus the important edge cases
+(empty pets, invalid times, touching endpoints, duplicate completion). Held
+back from 5/5 because a few contracts are not yet locked down — e.g.
+`filter_by_pet()` does not trim whitespace (`" Rex "` won't match), conflict
+detection is not yet exercised across large task sets, and there are no tests
+for the Streamlit `app.py` integration layer.
 
 ## 📐 Smarter Scheduling
 
